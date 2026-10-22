@@ -1,17 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
   <defs>
-    <linearGradient id="fundo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff5f8f"/>
-      <stop offset="0.55" stop-color="#c03cff"/>
-      <stop offset="1" stop-color="#5b3cff"/>
+    <linearGradient id="fundo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c1c1f"/>
+      <stop offset="1" stop-color="#050505"/>
     </linearGradient>
-    <linearGradient id="brilho" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    <linearGradient id="nota" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff6fa8"/>
+      <stop offset="0.5" stop-color="#c03cff"/>
+      <stop offset="1" stop-color="#7b2fd6"/>
     </linearGradient>
+    <filter id="brilho" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
   </defs>
+  <!-- fundo preto com borda sutil, como o tema escuro -->
   <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#fundo)"/>
-  <rect x="8" y="8" width="112" height="56" rx="28" fill="url(#brilho)"/>
-  <!-- nota musical dupla -->
-  <path fill="#ffffff" d="M52 36 L92 28 L92 80 A12 10 0 1 1 84 70.6 L84 45 L60 50 L60 88 A12 10 0 1 1 52 78.6 Z"/>
+  <rect x="8.5" y="8.5" width="111" height="111" rx="27.5" fill="none" stroke="#ffffff" stroke-opacity="0.10"/>
+  <!-- nota musical roxa com brilho -->
+  <path fill="#c03cff" opacity="0.55" filter="url(#brilho)" d="M52 36 L92 28 L92 80 A12 10 0 1 1 84 70.6 L84 45 L60 50 L60 88 A12 10 0 1 1 52 78.6 Z"/>
+  <path fill="url(#nota)" d="M52 36 L92 28 L92 80 A12 10 0 1 1 84 70.6 L84 45 L60 50 L60 88 A12 10 0 1 1 52 78.6 Z"/>
 </svg>

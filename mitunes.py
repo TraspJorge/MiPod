@@ -25,52 +25,32 @@ from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 import shuffle_sync  # noqa: E402
 
 TODAS = "__todas__"
+SUSPEITOS = ("Activador.vbs",)
+INVALIDOS_FAT = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
-# Tema preto: fundo preto de verdade, texto claro e destaque no roxo do icone
+# Tema preto: usa o tema escuro nativo do elementary com destaque roxo ("grape"), para botoes,
+# dialogos e campos ficarem corretos, e so escurece as areas de conteudo ate o preto.
+TEMA_ROXO = "io.elementary.stylesheet.grape"
 CSS_PRETO = b"""
-window, .background, stack, scrolledwindow, viewport { background-color: #000000; color: #e8e8e8; }
-headerbar, .titlebar {
-    background: #0b0b0b; border-color: #1c1c1c; box-shadow: none; color: #f2f2f2;
-}
-headerbar .title { color: #ffffff; }
-headerbar .subtitle { color: #8c8c8c; }
-headerbar button { color: #e8e8e8; background: transparent; border-color: transparent; box-shadow: none; }
-headerbar button:hover { background: #1f1f1f; }
-headerbar button:disabled { color: #4a4a4a; }
-list.sidebar, .sidebar { background-color: #070707; border-right: 1px solid #1c1c1c; }
-list.sidebar row { color: #d0d0d0; }
-list.sidebar row:selected, list.sidebar row:selected label, list.sidebar row:selected image {
-    background-color: #7b2fd6; color: #ffffff;
-}
-treeview.view { background-color: #000000; color: #e8e8e8; }
-treeview.view:selected { background-color: #7b2fd6; color: #ffffff; }
-treeview.view header button {
-    background: #0b0b0b; color: #9a9a9a; border-color: #1c1c1c; box-shadow: none;
-}
-.dim-label { color: #6f6f6f; }
-separator { background-color: #1c1c1c; }
-paned > separator {  /* a linha visivel vem da borda da barra lateral */
-    background-color: transparent; background-image: none; border: none; box-shadow: none; min-width: 0;
-}
-levelbar trough { background-color: #1a1a1a; border-color: #262626; }
-levelbar block.filled { background-color: #c03cff; border-color: #c03cff; }
-switch { background-color: #2a2a2a; border-color: #3a3a3a; }
-switch:checked { background-color: #7b2fd6; border-color: #7b2fd6; }
-switch slider { background: #f2f2f2; border-color: #3a3a3a; }
-dialog, messagedialog, filechooser { background-color: #0b0b0b; color: #e8e8e8; }
-entry { background-color: #141414; color: #ffffff; border-color: #2a2a2a; }
+treeview.view, scrolledwindow, viewport, stack { background-color: #000000; }
+treeview.view header button { background-color: #0a0a0a; }
+list.sidebar { background-color: #0a0a0a; }
+treeview.view:selected, treeview.view:selected:backdrop,
+list.sidebar row:selected, list.sidebar row:selected:backdrop { background-color: #6a2fc4; color: #ffffff; }
+list.sidebar row:selected label, list.sidebar row:selected image { color: #ffffff; }
+button.mitunes-alerta image, button.mitunes-alerta:backdrop image { color: #ff6b6b; -gtk-icon-palette: warning #ff6b6b; }
 """
 
 
 def aplicar_tema_preto():
     configuracoes = Gtk.Settings.get_default()
+    if Path("/usr/share/themes", TEMA_ROXO).is_dir():
+        configuracoes.set_property("gtk-theme-name", TEMA_ROXO)
     configuracoes.set_property("gtk-application-prefer-dark-theme", True)
     provedor = Gtk.CssProvider()
     provedor.load_from_data(CSS_PRETO)
     Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provedor,
                                              Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-SUSPEITOS = ("Activador.vbs",)
-INVALIDOS_FAT = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
 def achar_ipod():
@@ -123,6 +103,13 @@ class Janela(Gtk.ApplicationWindow):
         self.bt_ejetar.connect("clicked", self.on_ejetar)
         cabecalho.pack_end(self.bt_ejetar)
 
+        # Aviso de virus: so um icone pequeno de alerta, que aparece quando ha virus no iPod
+        self.bt_virus = Gtk.Button.new_from_icon_name("dialog-warning-symbolic", Gtk.IconSize.BUTTON)
+        self.bt_virus.get_style_context().add_class("mitunes-alerta")
+        self.bt_virus.connect("clicked", self.on_remover_virus)
+        self.bt_virus.set_no_show_all(True)
+        cabecalho.pack_end(self.bt_virus)
+
         self.sw_voz = Gtk.Switch(active=self.cfg.get("voz", True), valign=Gtk.Align.CENTER)
         self.sw_voz.connect("notify::active", self.on_voz)
         caixa_voz = Gtk.Box(spacing=6)
@@ -133,14 +120,6 @@ class Janela(Gtk.ApplicationWindow):
 
         raiz = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.add(raiz)
-
-        # Aviso de virus
-        self.aviso = Gtk.InfoBar(message_type=Gtk.MessageType.WARNING, show_close_button=False)
-        self.aviso_texto = Gtk.Label(xalign=0, wrap=True)
-        self.aviso.get_content_area().add(self.aviso_texto)
-        self.aviso.add_button("Remover vírus", 1)
-        self.aviso.connect("response", self.on_remover_virus)
-        raiz.pack_start(self.aviso, False, False, 0)
 
         self.pilha = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
         raiz.pack_start(self.pilha, True, True, 0)
@@ -234,7 +213,7 @@ class Janela(Gtk.ApplicationWindow):
         if not conectado:
             self.cabecalho.set_subtitle("Desconectado")
             self.pilha.set_visible_child_name("vazio")
-            self.aviso.hide()
+            self.bt_virus.hide()
             self.espaco.set_text("")
             self.barra.set_value(0)
             self.status.set_text("")
@@ -301,13 +280,12 @@ class Janela(Gtk.ApplicationWindow):
         self.espaco.set_text(f"{tamanho_legivel(uso.free)} livres de {tamanho_legivel(uso.total)}")
 
     def verificar_virus(self):
-        achados = [n for n in SUSPEITOS if (self.ipod / n).exists()]
-        if achados:
-            self.aviso_texto.set_markup(f"<b>Vírus encontrado no iPod:</b> {', '.join(achados)} (Houdini, um vírus de Windows). "
-                                        "Ele não afeta as músicas, mas pode infectar um PC com Windows.")
-            self.aviso.show_all()
+        self.virus = [n for n in SUSPEITOS if (self.ipod / n).exists()]
+        if self.virus:
+            self.bt_virus.set_tooltip_text(f"Vírus no iPod: {', '.join(self.virus)} — clique para remover")
+            self.bt_virus.show()
         else:
-            self.aviso.hide()
+            self.bt_virus.hide()
 
     # ---------- Sincronizacao em segundo plano ----------
 
@@ -436,16 +414,25 @@ class Janela(Gtk.ApplicationWindow):
         if self.ipod:
             self.trabalhar("Atualizando a voz...", lambda: None)
 
-    def on_remover_virus(self, _barra, resposta):
-        if resposta != 1 or not self.ipod:
+    def on_remover_virus(self, _):
+        if not self.ipod or not self.virus:
             return
-        for nome in SUSPEITOS:
+        dialogo = Gtk.MessageDialog(transient_for=self, modal=True, message_type=Gtk.MessageType.WARNING,
+                                    buttons=Gtk.ButtonsType.NONE, text="Remover vírus do iPod?")
+        dialogo.format_secondary_text(f"{', '.join(self.virus)} é um vírus de Windows (Houdini). "
+                                      "Ele não afeta as músicas, mas pode infectar um PC com Windows.")
+        dialogo.add_buttons("Cancelar", Gtk.ResponseType.CANCEL, "Remover", Gtk.ResponseType.OK)
+        dialogo.get_widget_for_response(Gtk.ResponseType.OK).get_style_context().add_class("destructive-action")
+        resposta = dialogo.run()
+        dialogo.destroy()
+        if resposta != Gtk.ResponseType.OK:
+            return
+        for nome in self.virus:
             alvo = self.ipod / nome
             if alvo.exists():
                 alvo.unlink()
         os.sync()
         self.verificar_virus()
-        self.mensagem("Vírus removido", "O arquivo Activador.vbs foi apagado do iPod.")
 
     def on_ejetar(self, _):
         alvo = str(self.ipod)
