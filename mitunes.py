@@ -25,6 +25,50 @@ from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
 import shuffle_sync  # noqa: E402
 
 TODAS = "__todas__"
+
+# Tema preto: fundo preto de verdade, texto claro e destaque no roxo do icone
+CSS_PRETO = b"""
+window, .background, stack, scrolledwindow, viewport { background-color: #000000; color: #e8e8e8; }
+headerbar, .titlebar {
+    background: #0b0b0b; border-color: #1c1c1c; box-shadow: none; color: #f2f2f2;
+}
+headerbar .title { color: #ffffff; }
+headerbar .subtitle { color: #8c8c8c; }
+headerbar button { color: #e8e8e8; background: transparent; border-color: transparent; box-shadow: none; }
+headerbar button:hover { background: #1f1f1f; }
+headerbar button:disabled { color: #4a4a4a; }
+list.sidebar, .sidebar { background-color: #070707; border-right: 1px solid #1c1c1c; }
+list.sidebar row { color: #d0d0d0; }
+list.sidebar row:selected, list.sidebar row:selected label, list.sidebar row:selected image {
+    background-color: #7b2fd6; color: #ffffff;
+}
+treeview.view { background-color: #000000; color: #e8e8e8; }
+treeview.view:selected { background-color: #7b2fd6; color: #ffffff; }
+treeview.view header button {
+    background: #0b0b0b; color: #9a9a9a; border-color: #1c1c1c; box-shadow: none;
+}
+.dim-label { color: #6f6f6f; }
+separator { background-color: #1c1c1c; }
+paned > separator {  /* a linha visivel vem da borda da barra lateral */
+    background-color: transparent; background-image: none; border: none; box-shadow: none; min-width: 0;
+}
+levelbar trough { background-color: #1a1a1a; border-color: #262626; }
+levelbar block.filled { background-color: #c03cff; border-color: #c03cff; }
+switch { background-color: #2a2a2a; border-color: #3a3a3a; }
+switch:checked { background-color: #7b2fd6; border-color: #7b2fd6; }
+switch slider { background: #f2f2f2; border-color: #3a3a3a; }
+dialog, messagedialog, filechooser { background-color: #0b0b0b; color: #e8e8e8; }
+entry { background-color: #141414; color: #ffffff; border-color: #2a2a2a; }
+"""
+
+
+def aplicar_tema_preto():
+    configuracoes = Gtk.Settings.get_default()
+    configuracoes.set_property("gtk-application-prefer-dark-theme", True)
+    provedor = Gtk.CssProvider()
+    provedor.load_from_data(CSS_PRETO)
+    Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), provedor,
+                                             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 SUSPEITOS = ("Activador.vbs",)
 INVALIDOS_FAT = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
@@ -113,7 +157,7 @@ class Janela(Gtk.ApplicationWindow):
         self.pilha.add_named(vazio, "vazio")
 
         # Tela principal: playlists | musicas
-        painel = Gtk.Paned(position=220)
+        painel = Gtk.Paned(position=220, wide_handle=False)
         self.pilha.add_named(painel, "ipod")
 
         self.lista_playlists = Gtk.ListBox(selection_mode=Gtk.SelectionMode.BROWSE)
@@ -420,6 +464,10 @@ class App(Gtk.Application):
     def __init__(self):
         super().__init__(application_id="br.jorge.MiTunes")
         GLib.set_application_name("MiTunes")
+
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
+        aplicar_tema_preto()
 
     def do_activate(self):
         janela = self.props.active_window or Janela(self)
