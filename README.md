@@ -1,6 +1,10 @@
+<p align="center"><img src="mitunes.svg" width="96" alt="Ícone do MiTunes"></p>
+
 # MiTunes (MiPod)
 
 Gerenciador do **iPod Shuffle 4ª geração** para Linux, no lugar do iTunes.
+
+![Janela do MiTunes com todas as músicas do iPod](docs/mitunes-todas.png)
 
 Jogue arquivos MP3/M4A na pasta `music` do iPod (ou use a janela do MiTunes) e eles passam a tocar.
 O firmware original da Apple continua intocado: o MiTunes recria a parte que o iTunes fazia, gerando o
@@ -12,6 +16,11 @@ banco de músicas que o iPod lê (`iPod_Control/iTunes/iTunesSD`) e as vozes do 
 - VoiceOver em português (espeak): o iPod fala o nome da música, artista e playlist
 - Serviço que atualiza o iPod sozinho ao conectar ou quando a pasta `music` muda
 - Detecta e remove o vírus `Activador.vbs` (Houdini/H-worm) se estiver no iPod
+
+## Playlists
+Cada subpasta de `music` vira uma playlist, mostrada na barra lateral:
+
+![Playlist Rock selecionada no MiTunes](docs/mitunes-playlist.png)
 
 ## Instalação
 ```sh
