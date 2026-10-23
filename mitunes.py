@@ -192,6 +192,7 @@ class Janela(Gtk.ApplicationWindow):
         self.connect("drag-data-received", self.on_soltar)
 
         self.show_all()
+        self.recarregar()  # estado inicial: sem iPod, botoes desativados
         self.verificar_ipod()
         GLib.timeout_add_seconds(2, self.verificar_ipod)
 
