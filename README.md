@@ -22,12 +22,46 @@ Cada subpasta de `music` vira uma playlist, mostrada na barra lateral:
 
 ![Playlist Rock selecionada no MiTunes](docs/mitunes-playlist.png)
 
+## Requisitos
+- **iPod Shuffle 4ª geração**; outros modelos não foram testados
+- Linux com Python 3, GTK 3 (PyGObject) e systemd do usuário; feito para o elementary OS
+- `espeak` para as vozes (opcional)
+- O iPod aparece como disco em `/media/<usuário>/` com a pasta `iPod_Control`. O serviço automático só vigia o volume de
+  nome **EDIPOD**; a janela do MiTunes acha qualquer iPod montado, mas prefere esse nome
+
 ## Instalação
 ```sh
+git clone https://github.com/TraspJorge/MiPod.git
+cd MiPod
 sh instalar.sh
 ```
 Instala em `~/.local/share/mitunes`, cria o atalho no menu de aplicativos (comando `mitunes`) e o serviço
-`mitunes-vigia` (systemd do usuário). Requer Python 3 com GTK 3 (PyGObject) e, para a voz, `espeak`.
+`mitunes-vigia` (systemd do usuário). Não usa `sudo`.
+
+### Desinstalar
+```sh
+systemctl --user disable --now mitunes-vigia.service
+rm -f ~/.config/systemd/user/mitunes-vigia.service ~/.local/bin/mitunes \
+      ~/.local/share/applications/mitunes.desktop ~/.local/share/icons/hicolor/scalable/apps/mitunes.svg
+rm -rf ~/.local/share/mitunes
+systemctl --user daemon-reload
+```
+Suas músicas no iPod não são tocadas.
+
+## O que ele altera no iPod
+- **Recria** o banco `iPod_Control/iTunes/iTunesSD` e a pasta das vozes (`iPod_Control/Speakable`) a cada sincronização
+- **Não mexe** nas suas músicas: elas ficam na pasta `music`
+- Avisa e remove o arquivo `Activador.vbs` (vírus Houdini/H-worm) se estiver no iPod
+
+Mesmo assim, faça uma cópia da pasta `iPod_Control` antes da primeira vez, se o iPod tiver algo importante.
+
+## Problemas comuns
+| Sintoma | O que fazer |
+|---|---|
+| A janela diz que não achou o iPod | Confira se ele está montado em `/media/<usuário>/` e tem a pasta `iPod_Control` |
+| O iPod não atualiza sozinho | O serviço só vigia o volume `EDIPOD`; veja `systemctl --user status mitunes-vigia` |
+| O iPod não fala o nome das músicas | Instale o `espeak` e sincronize de novo |
+| Músicas novas não tocam | Use MP3 ou M4A dentro da pasta `music` e espere a sincronização terminar antes de ejetar |
 
 ## Arquivos
 | Arquivo | Função |
